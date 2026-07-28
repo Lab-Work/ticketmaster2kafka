@@ -36,10 +36,12 @@ Renamed in the 1.0 migration: `SQL_HOSTNAME`/`SQL_PORT`/`SQL_USERNAME`/
 `TELEMETRY_LOG_LEVEL` (logs go to stdout, no log file). The deployment's
 Secret/ConfigMap must supply the new names.
 
-The Strimzi CA cert must live on the host at `/etc/viewlive/certs/strimzi-ca.crt`
-and is mounted read-only into the container. Override with `KAFKA_CA_LOCATION`
-if you need a different in-container path, or supply the CA inline with
-`KAFKA_CA_CERT` and skip the mount entirely.
+`KAFKA_CA_LOCATION` defaults to `strimzi-ca.crt`, resolved relative to the
+container's `/app` working directory — hence the `-v` below mounting the cert
+there read-only. Set `KAFKA_CA_LOCATION` to an absolute path if the cert lives
+elsewhere (a deployment mounting `/etc/viewlive/certs` would do that), or skip
+the mount entirely by supplying `KAFKA_CA_CERT` as an inline PEM string, which
+takes precedence.
 
 ### Docker
 
@@ -51,7 +53,7 @@ arrive on the next image build:
 docker build --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t ticketmaster2kafka:0.0 .
 docker run \
   --env-file path/to/1.env \
-  -v /etc/viewlive/certs:/etc/viewlive/certs:ro \
+  -v $(pwd)/strimzi-ca.crt:/app/strimzi-ca.crt:ro \
   -p 9100:9100 \
   ticketmaster2kafka:0.0
 ```
