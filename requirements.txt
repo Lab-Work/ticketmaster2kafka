@@ -1,9 +1,21 @@
-confluent-kafka
+# LV connectors — installed in the Dockerfile's builder stage from the private
+# Lab-Work repos (see Dockerfile). Lower bounds only, so a connector fix
+# reaches this service on its next image build. During local development,
+# point pip at the sibling checkouts:
+#
+#   pip install -e ../lv_telemetry_connector
+#   pip install -e ../lv_kafka_connector
+#   pip install -e ../lv_db_connector
+
+lv_telemetry_connector>=1.0
+lv_kafka_connector>=1.0
+lv_db_connector>=1.0
+
+# Third-party. confluent-kafka and psycopg come transitively via the
+# connectors; don't list them here.
 requests==2.31.0
 python-dotenv
-psycopg
 pytz
 tzdata
-psycopg-binary
 filelock
 numpy

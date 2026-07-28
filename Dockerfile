@@ -1,7 +1,16 @@
 FROM python:3.12 AS builder
 
+# The lv_* connectors live in private Lab-Work repos, so they can't come from
+# requirements.txt alone. GITHUB_TOKEN arrives as a build arg (in CI, Drone
+# passes its GITHUB_PUSH_TOKEN secret); installing in this builder stage keeps
+# the token out of the final image's layer history.
+ARG GITHUB_TOKEN
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --no-cache-dir \
+    git+https://x-access-token:${GITHUB_TOKEN}@github.com/Lab-Work/lv_telemetry_connector \
+    git+https://x-access-token:${GITHUB_TOKEN}@github.com/Lab-Work/lv_kafka_connector \
+    git+https://x-access-token:${GITHUB_TOKEN}@github.com/Lab-Work/lv_db_connector
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -13,5 +22,6 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 COPY . .
 
-RUN mkdir -p /var/log/ticketmaster2kafka
+# JSON logs go to stdout; Prometheus metrics are served on :9100.
+EXPOSE 9100
 CMD ["python3", "ticketmaster2kafka.py"]
