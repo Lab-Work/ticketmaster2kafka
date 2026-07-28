@@ -18,4 +18,9 @@ docker run \
   ticketmaster2kafka:0.0
 ```
 
+### CI/CD
+
+Drone (`.drone.yml`) runs on every push to `main`: it builds the image, pushes
+`docker.mogi.io/ticketmaster2kafka:<commit-sha>`, then bumps the image tag in
+`2kafka/ticketmaster/deployment.yaml` of `k8s-manifests-backend` to deploy.
 
