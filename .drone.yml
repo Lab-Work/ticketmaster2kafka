@@ -8,13 +8,22 @@ platform:
 
 # Build + deploy from the default branch only: feature-branch pushes and PRs
 # must not push images or bump the k8s manifest.
-trigger:
-  branch:
-    - main
-  event:
-    - push
+# trigger:
+#   branch:
+#     - main
+#   event:
+#     - push
 
 steps:
+  - name: clone-private-repo
+    image: alpine/git
+    environment:
+      GITHUB_TOKEN:
+        from_secret: GITHUB_PUSH_TOKEN
+    commands:
+      - git clone https://$GITHUB_TOKEN@github.com/Lab-Work/lv_telemetry_connector ./lv_telemetry_connector
+      - git clone https://$GITHUB_TOKEN@github.com/Lab-Work/lv_kafka_connector ./lv_kafka_connector
+      - git clone https://$GITHUB_TOKEN@github.com/Lab-Work/lv_db_connector ./lv_db_connector
   - name: build-image
     # Pinned: plugins/docker:latest ships Docker 20.10 built against iptables-legacy,
     # whose nat table does not exist on Talos nodes, so its embedded dockerd never starts.
@@ -29,8 +38,13 @@ steps:
         from_secret: DOCKER_USERNAME
       password:
         from_secret: DOCKER_PASSWORD
-      # The lv_* connectors are private; the Dockerfile's builder stage
-      # installs them with this token (it never reaches the pushed image).
+      # Vestigial: the Dockerfile no longer pip-installs from GitHub, so this
+      # build arg is unused and Docker will warn it wasn't consumed. The
+      # connectors now arrive via the clone-private-repo step above. Kept so
+      # the token is already wired if that install is ever restored. NOTE the
+      # clone embeds the token in each clone's .git/config, which is why
+      # .dockerignore excludes **/.git — otherwise `COPY . .` in the final
+      # stage would bake it into the pushed image.
       build_args_from_env:
         - GITHUB_TOKEN
     environment:

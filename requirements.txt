@@ -7,9 +7,9 @@
 #   pip install -e ../lv_kafka_connector
 #   pip install -e ../lv_db_connector
 
-lv_telemetry_connector>=1.0
-lv_kafka_connector>=1.0
-lv_db_connector>=1.0
+./lv_telemetry_connector
+./lv_kafka_connector
+./lv_db_connector
 
 # Third-party. confluent-kafka and psycopg come transitively via the
 # connectors; don't list them here.

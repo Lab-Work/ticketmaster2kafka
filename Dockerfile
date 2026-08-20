@@ -7,11 +7,17 @@ FROM python:3.12 AS builder
 ARG GITHUB_TOKEN
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-RUN pip install --no-cache-dir \
-    git+https://x-access-token:${GITHUB_TOKEN}@github.com/Lab-Work/lv_telemetry_connector \
-    git+https://x-access-token:${GITHUB_TOKEN}@github.com/Lab-Work/lv_kafka_connector \
-    git+https://x-access-token:${GITHUB_TOKEN}@github.com/Lab-Work/lv_db_connector
+# https://x-access-token:${GITHUB_TOKEN}@
+# RUN pip install --no-cache-dir \
+#     git+github.com/Lab-Work/lv_telemetry_connector \   
+#     git+github.com/Lab-Work/lv_kafka_connector \
+#     git+github.com/Lab-Work/lv_db_connector
+
+COPY ./lv_telemetry_connector ./lv_telemetry_connector
+COPY ./lv_kafka_connector ./lv_kafka_connector
+COPY ./lv_db_connector ./lv_db_connector
 COPY requirements.txt .
+RUN ls -la
 RUN pip install --no-cache-dir -r requirements.txt
 
 FROM python:3.12
