@@ -67,5 +67,16 @@ steps:
       - git clone https://$GITHUB_PUSH_TOKEN@github.com/blegas78/k8s-manifests-backend.git
       - cd k8s-manifests-backend
       - yq eval '.spec.template.spec.containers[0].image = "docker.mogi.io/ticketmaster2kafka:${DRONE_COMMIT_SHA}"' -i 2kafka/ticketmaster/deployment.yaml
-      - git commit -am "Update image to ${DRONE_COMMIT_SHA}"
-      - git push https://$GITHUB_PUSH_TOKEN@github.com/blegas78/k8s-manifests-backend.git HEAD:main
+      # If the manifest already points at this commit (e.g. it was set by
+      # hand to match, or this build is a re-run of one that already
+      # updated it), yq's rewrite is a no-op and `git commit -am` would
+      # exit non-zero on "nothing to commit", failing the whole step even
+      # though there's genuinely nothing wrong. Only commit/push when the
+      # rewrite actually changed something.
+      - |
+        if git diff --quiet; then
+          echo "manifest already references ${DRONE_COMMIT_SHA} - nothing to commit"
+        else
+          git commit -am "Update image to ${DRONE_COMMIT_SHA}"
+          git push https://$GITHUB_PUSH_TOKEN@github.com/blegas78/k8s-manifests-backend.git HEAD:main
+        fi
