@@ -76,7 +76,31 @@ steps:
       - |
         if git diff --quiet; then
           echo "manifest already references ${DRONE_COMMIT_SHA} - nothing to commit"
+          echo "unchanged" > ../manifest-status
         else
           git commit -am "Update image to ${DRONE_COMMIT_SHA}"
           git push https://$GITHUB_PUSH_TOKEN@github.com/blegas78/k8s-manifests-backend.git HEAD:main
+          echo "changed" > ../manifest-status
+        fi
+
+  - name: warn-if-manifest-unchanged
+    image: alpine/git
+    failure: ignore
+    commands:
+      - |
+        status=$(cat manifest-status 2>/dev/null || echo "unknown")
+        if [ "$status" = "unchanged" ]; then
+          echo "=============================================================="
+          echo "WARNING: this build did NOT change the k8s manifest."
+          echo "It already pointed at docker.mogi.io/ticketmaster2kafka:${DRONE_COMMIT_SHA}"
+          echo "before this build ran. If you expected this build to deploy new"
+          echo "code, check that your latest commit was actually pushed before"
+          echo "triggering the build."
+          echo "=============================================================="
+          exit 1
+        elif [ "$status" = "changed" ]; then
+          echo "manifest was updated this build - no warning needed."
+        else
+          echo "manifest-status marker not found - update-k8s-manifests may not have run as expected."
+          exit 1
         fi
