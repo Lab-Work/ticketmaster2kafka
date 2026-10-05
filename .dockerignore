@@ -18,3 +18,7 @@ __pycache__
 venv
 .venv
 .DS_Store
+
+# Not part of the runtime image: the test suite and its cache.
+tests
+.pytest_cache
